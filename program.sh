@@ -1,0 +1,3 @@
+fasm program.asm
+./program
+

@@ -10,59 +10,60 @@ section .text
 
 _start:
     ; Mostrar el mensaje para ingresar el número
-    mov rax, 0x1         ; syscall number for sys_write
-    mov rdi, 0x1         ; file descriptor 1 (stdout)
-    mov rsi, msg         ; pointer to the message
-    mov rdx, 37          ; message length
-    syscall
+    mov eax, 4           ; syscall number for sys_write
+    mov ebx, 1           ; file descriptor 1 (stdout)
+    mov ecx, msg         ; pointer to the message
+    mov edx, 37          ; message length
+    int 0x80
 
     ; Leer el número desde la entrada estándar (teclado)
-    mov rax, 0           ; syscall number for sys_read
-    mov rdi, 0           ; file descriptor 0 (stdin)
-    mov rsi, num         ; buffer to store input
-    mov rdx, 2           ; maximum number of bytes to read
-    syscall
+    mov eax, 3           ; syscall number for sys_read
+    mov ebx, 0           ; file descriptor 0 (stdin)
+    mov ecx, num         ; buffer to store input
+    mov edx, 2           ; maximum number of bytes to read
+    int 0x80
 
     ; Convertir el número ingresado a entero
-    xor rax, rax
-    mov rdi, 10
-    mov rsi, num
-    xor rdx, rdx
+    xor eax, eax
+    mov ecx, 10
+    mov ebx, num
+    xor edx, edx
 
 convert_loop:
     lodsb
     sub al, '0'
-    imul rdx, rdi
-    add rdx, rax
-    test byte [rsi], rsi
+    imul edx, edx, ecx
+    add edx, eax
+    test byte [ebx], byte 0x0A
     jnz convert_loop
 
     ; Calcular el factorial llamando a la función recursiva
-    mov rdi, rdx
+    push edx
     call factorial
 
     ; Mostrar el resultado
-    mov rax, 0x1         ; syscall number for sys_write
-    mov rdi, 0x1         ; file descriptor 1 (stdout)
-    mov rsi, result      ; pointer to the result message
-    mov rdx, 16          ; message length
-    syscall
+    mov eax, 4           ; syscall number for sys_write
+    mov ebx, 1           ; file descriptor 1 (stdout)
+    mov ecx, result      ; pointer to the result message
+    mov edx, 16          ; message length
+    int 0x80
 
     ; Salir del programa
-    mov rax, 0x60        ; syscall number for sys_exit
-    xor rdi, rdi         ; exit status 0
-    syscall
+    mov eax, 1           ; syscall number for sys_exit
+    xor ebx, ebx         ; exit status 0
+    int 0x80
 
 factorial:
     ; Función recursiva para calcular el factorial
-    ; Entrada: rdi = número para calcular su factorial
-    ; Salida: rax = factorial
-    cmp rdi, 1
+    ; Entrada: [esp+4] = número para calcular su factorial
+    ; Salida: eax = factorial
+    cmp dword [esp+4], 1
     jle .done
-    dec rdi
-    push rdi
+    dec dword [esp+4]
+    push eax
     call factorial
-    pop rdi
-    imul rax, rdi
+    pop eax
+    imul eax, dword [esp+4]
 .done:
     ret
+
